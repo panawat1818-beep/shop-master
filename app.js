@@ -1,170 +1,223 @@
-<!doctype html>
-<html lang="th">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#ff7a00" />
-    <meta name="description" content="Shop Master mobile-first commerce dashboard" />
-    <title>Shop Master</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <section id="loginScreen" class="screen auth-screen active">
-      <div class="card auth-card">
-        <div class="brand">
-          <b>SM</b>
-          <div>
-            <small>SHOP MASTER</small>
-            <h1>เข้าสู่ระบบ</h1>
-          </div>
-        </div>
+const state = {
+  products: [],
+  currentUser: null,
+  firebaseReady: false,
+  auth: null,
+  db: null,
+};
 
-        <form id="loginForm" class="form">
-          <label>
-            อีเมล
-            <input type="email" id="emailInput" value="demo@shopmaster.app" required />
-          </label>
-          <label>
-            รหัสผ่าน
-            <input type="password" id="passwordInput" value="123456" required />
-          </label>
-          <button class="primary" type="submit">เข้าสู่ระบบ</button>
-          <button class="secondary" type="button" id="googleLoginBtn">ใช้บัญชี Google</button>
-        </form>
+const firebaseConfig = {
+  apiKey: "AIzaSyCBcupiyWFDNnMjYol48QnweG5xLWO_z8A",
+  authDomain: "shop-master-f3e94.firebaseapp.com",
+  databaseURL: "https://shop-master-f3e94-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "shop-master-f3e94",
+  storageBucket: "shop-master-f3e94.firebasestorage.app",
+  messagingSenderId: "211475508789",
+  appId: "1:211475508789:web:13f8ebad95b30bf33ccb7c",
+};
 
-        <p class="note">ยังไม่มีบัญชี? <a href="#">สร้างบัญชี</a></p>
-      </div>
-    </section>
+const STORAGE_KEY = 'shop-master-products';
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => document.querySelectorAll(selector);
 
-    <section id="appScreen" class="screen app-screen">
-      <header class="topbar">
-        <div>
-          <small>SHOP MASTER</small>
-          <h1 id="welcomeText">สวัสดีครับ</h1>
-        </div>
-        <button id="logoutBtn" class="icon" type="button">⎋</button>
-      </header>
+const loginScreen = $('#loginScreen');
+const appScreen = $('#appScreen');
+const modal = $('#modal');
+const productList = $('#productList');
 
-      <main>
-        <div class="section-head">
-          <div>
-            <small class="muted">ภาพรวมวันนี้</small>
-            <h2>Dashboard</h2>
-          </div>
-          <button id="openAddBtn" class="primary compact" type="button">+ เพิ่มสินค้า</button>
-        </div>
+function setupFirebase() {
+  if (!window.firebase) {
+    console.warn('Firebase SDK is not loaded. Running in local demo mode.');
+    return;
+  }
 
-        <div class="stats">
-          <article class="stat orange">
-            <small>รายได้วันนี้</small>
-            <strong id="revenueValue">฿0</strong>
-          </article>
-          <article class="stat">
-            <small>คลิกลิงก์</small>
-            <strong id="linkClicks">0</strong>
-          </article>
-          <article class="stat">
-            <small>ออเดอร์</small>
-            <strong id="orderValue">0</strong>
-          </article>
-          <article class="stat">
-            <small>ต้องตอบ</small>
-            <strong id="chatPending">0</strong>
-          </article>
-        </div>
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    state.auth = firebase.auth();
+    state.db = firebase.firestore();
+    state.firebaseReady = true;
+  } catch (error) {
+    console.warn('Firebase initialization failed. Running in local demo mode.', error);
+  }
+}
 
-        <div class="actions">
-          <button class="action primary-action" data-view="products" type="button">🔗 เพิ่มสินค้า</button>
-          <button class="action" data-view="products" type="button">📦 สินค้าของฉัน</button>
-          <button class="action" data-view="chat" type="button">💬 แชต</button>
-          <button class="action" data-view="ai" type="button">🤖 AI Assistant</button>
-          <button class="action" data-view="analytics" type="button">📊 Analytics</button>
-          <button class="action" data-view="automation" type="button">⚙️ Automation</button>
-        </div>
+function renderProducts() {
+  if (!state.products.length) {
+    productList.innerHTML = '<p class="empty">ยังไม่มีสินค้า เพิ่มสินค้าด้วย URL ได้เลย</p>';
+    return;
+  }
 
-        <section class="card panel">
-          <div class="section-head">
-            <h3>Marketplace</h3>
-            <small class="muted">สถานะการเชื่อมต่อ</small>
-          </div>
-          <div class="store"><span><i class="dot shopee"></i>Shopee</span><em>ยังไม่เชื่อม</em></div>
-          <div class="store"><span><i class="dot lazada"></i>Lazada</span><em>ยังไม่เชื่อม</em></div>
-          <div class="store"><span><i class="dot tiktok"></i>TikTok Shop</span><em>เตรียมโครงไว้</em></div>
-        </section>
+  productList.innerHTML = state.products.map((product) => `
+    <article class="product">
+      <b>${escapeHtml(product.name)}</b>
+      <small>${escapeHtml(product.store)} · ${escapeHtml(product.url)}</small>
+    </article>
+  `).join('');
+}
 
-        <section id="products" class="view card panel">
-          <div class="section-head">
-            <h3>สินค้าของฉัน</h3>
-            <button id="openAddSecondaryBtn" class="primary compact" type="button">+ เพิ่ม</button>
-          </div>
-          <div id="productList"></div>
-        </section>
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#039;',
+    '"': '&quot;',
+  }[character]));
+}
 
-        <section id="chat" class="view card panel">
-          <h3>แชตลูกค้า</h3>
-          <p class="empty">ยังไม่มีข้อความใหม่</p>
-        </section>
+function loadLocalProducts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    state.products = Array.isArray(saved) ? saved : [];
+  } catch {
+    state.products = [];
+  }
+  renderProducts();
+}
 
-        <section id="ai" class="view card panel">
-          <h3>AI Assistant</h3>
-          <p class="message">สวัสดีครับ ผมพร้อมช่วยตอบลูกค้าและวิเคราะห์สินค้า</p>
-        </section>
+async function loadProducts() {
+  if (!state.firebaseReady || !state.currentUser || state.currentUser.isDemo) {
+    loadLocalProducts();
+    return;
+  }
 
-        <section id="analytics" class="view card panel">
-          <h3>Analytics</h3>
-          <p class="empty">ข้อมูลจะแสดงเมื่อเริ่มเชื่อมต่อร้านค้า</p>
-        </section>
+  try {
+    const snapshot = await state.db.collection('products')
+      .where('uid', '==', state.currentUser.uid)
+      .orderBy('createdAt', 'desc')
+      .get();
+    state.products = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    renderProducts();
+  } catch (error) {
+    console.warn('Could not load Firestore products. Using local storage.', error);
+    loadLocalProducts();
+  }
+}
 
-        <section id="automation" class="view card panel">
-          <h3>Automation</h3>
-          <div class="store"><span>ตอบลูกค้าใหม่อัตโนมัติ</span><b class="on">ON</b></div>
-          <div class="store"><span>แจ้งเตือนสต็อก</span><b class="on">ON</b></div>
-        </section>
-      </main>
+async function createProduct(product) {
+  const data = {
+    ...product,
+    uid: state.currentUser?.uid || 'demo-user',
+    createdAt: firebase?.firestore?.FieldValue?.serverTimestamp?.() || Date.now(),
+  };
 
-      <nav>
-        <button class="nav active" data-view="home" type="button">🏠<small>Home</small></button>
-        <button class="nav" data-view="products" type="button">📦<small>สินค้า</small></button>
-        <button class="nav" data-view="chat" type="button">💬<small>แชต</small></button>
-        <button class="nav" data-view="ai" type="button">🤖<small>AI</small></button>
-        <button class="nav" data-view="automation" type="button">⚙️<small>Auto</small></button>
-      </nav>
-    </section>
+  if (state.firebaseReady && state.currentUser && !state.currentUser.isDemo) {
+    try {
+      const reference = await state.db.collection('products').add(data);
+      state.products.unshift({ id: reference.id, ...product });
+      renderProducts();
+      return;
+    } catch (error) {
+      console.warn('Could not save to Firestore. Saving locally.', error);
+    }
+  }
 
-    <div id="modal" class="modal hidden">
-      <div class="card modal-card">
-        <div class="section-head">
-          <h3>เพิ่มสินค้า</h3>
-          <button id="closeModalBtn" class="icon" type="button">✕</button>
-        </div>
+  state.products.unshift({ ...product, createdAt: Date.now() });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.products));
+  renderProducts();
+}
 
-        <form id="productForm" class="form">
-          <label>
-            ลิงก์สินค้า
-            <input id="productUrl" type="url" placeholder="https://..." required />
-          </label>
-          <label>
-            ชื่อสินค้า
-            <input id="productName" placeholder="ใส่ชื่อสินค้า" required />
-          </label>
-          <label>
-            ตลาด
-            <select id="productStore">
-              <option>Shopee</option>
-              <option>Lazada</option>
-              <option>TikTok Shop</option>
-              <option>Facebook</option>
-            </select>
-          </label>
-          <button class="primary" type="submit">บันทึกสินค้า</button>
-        </form>
-      </div>
-    </div>
+function showApp(user) {
+  state.currentUser = user;
+  $('#welcomeText').textContent = user.displayName || user.email || 'สวัสดีครับ';
+  loginScreen.classList.remove('active');
+  appScreen.classList.add('active');
+  loadProducts();
+}
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="./app.js"></script>
-  </body>
-</html>
+function showLogin() {
+  appScreen.classList.remove('active');
+  loginScreen.classList.add('active');
+}
+
+async function loginWithEmail(event) {
+  event.preventDefault();
+  const email = $('#emailInput').value.trim();
+  const password = $('#passwordInput').value;
+
+  if (!state.firebaseReady) {
+    showApp({ email, displayName: email.split('@')[0], uid: 'demo-user', isDemo: true });
+    return;
+  }
+
+  try {
+    const result = await state.auth.signInWithEmailAndPassword(email, password);
+    showApp(result.user);
+  } catch (error) {
+    alert(`เข้าสู่ระบบไม่สำเร็จ: ${error.message}`);
+  }
+}
+
+async function loginWithGoogle() {
+  if (!state.firebaseReady) {
+    showApp({ email: 'demo@shopmaster.app', displayName: 'Demo User', uid: 'demo-user', isDemo: true });
+    return;
+  }
+
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await state.auth.signInWithPopup(provider);
+    showApp(result.user);
+  } catch (error) {
+    alert(`เข้าสู่ระบบ Google ไม่สำเร็จ: ${error.message}`);
+  }
+}
+
+async function logout() {
+  if (state.firebaseReady && state.currentUser && !state.currentUser.isDemo) {
+    await state.auth.signOut().catch(() => {});
+  }
+  state.currentUser = null;
+  showLogin();
+}
+
+function showView(viewName) {
+  $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewName));
+  $$('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewName));
+}
+
+function openModal() { modal.classList.remove('hidden'); }
+function closeModal() { modal.classList.add('hidden'); $('#productForm').reset(); }
+
+function bindEvents() {
+  $('#loginForm').addEventListener('submit', loginWithEmail);
+  $('#googleLoginBtn').addEventListener('click', loginWithGoogle);
+  $('#logoutBtn').addEventListener('click', logout);
+  $('#openAddBtn').addEventListener('click', openModal);
+  $('#openAddSecondaryBtn').addEventListener('click', openModal);
+  $('#closeModalBtn').addEventListener('click', closeModal);
+
+  $('#productForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const name = $('#productName').value.trim();
+    const url = $('#productUrl').value.trim();
+    const store = $('#productStore').value;
+    if (!name || !url) return;
+    await createProduct({ name, url, store });
+    closeModal();
+    showView('products');
+  });
+
+  $$('[data-view]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.view;
+      if (target === 'home') {
+        $$('.view').forEach((view) => view.classList.remove('active'));
+        $$('.nav').forEach((item) => item.classList.toggle('active', item.dataset.view === 'home'));
+      } else {
+        showView(target);
+      }
+    });
+  });
+}
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+}
+
+setupFirebase();
+bindEvents();
+loadLocalProducts();
+registerServiceWorker();
