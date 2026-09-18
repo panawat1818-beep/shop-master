@@ -2,35 +2,27 @@
 
 Mobile-first PWA starter for a multi-store commerce dashboard.
 
-## Features
+## Included
 
-- Mobile-first dashboard layout
-- Product URL intake workflow
-- Multi-store status cards for Shopee, Lazada, TikTok
-- PWA manifest and offline cache support
-- Cloudflare-ready static deployment
+- Demo login screen
+- Dashboard with revenue, clicks, orders, and pending chats
+- Product catalog with add-product-by-URL flow
+- Marketplace readiness cards for Shopee, Lazada, and TikTok
+- Chat, AI Assistant, and Automation views
+- PWA manifest and service worker
 
 ## Run locally
-
-Open `index.html` in a browser, or use a simple local web server:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then visit `http://localhost:8000`.
+Open `http://localhost:8000`.
 
-## Deploy to Cloudflare Pages
+## Deploy
 
-1. Connect this GitHub repository to Cloudflare Pages.
-2. Set the build output to the repository root.
-3. Publish the site with the default static site configuration.
+Connect this repository to Cloudflare Pages and use the repository root as the output directory.
 
-## Next phase
+## Next steps
 
-This starter is the foundation for:
-- Firebase auth and database
-- product sync workflows
-- customer chat inbox
-- AI assistant automation
-- analytics and notifications
+Firebase Authentication, Firestore, URL metadata extraction, marketplace APIs, AI integration, and analytics can be added without replacing the frontend structure.
