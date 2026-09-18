@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Each signed-in user can only access their own products.
+    match /products/{productId} {
+      allow read: if isOwner(resource.data.uid);
+
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.name is string
+        && request.resource.data.url is string
+        && request.resource.data.store is string;
+
+      allow update: if isOwner(resource.data.uid)
+        && isOwner(request.resource.data.uid);
+
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
