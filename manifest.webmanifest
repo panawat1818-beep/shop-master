@@ -1,0 +1,58 @@
+const state = {
+  revenue: 0,
+  linkClicks: 0,
+  orders: 0,
+  chatPending: 0,
+};
+
+const elements = {
+  revenueValue: document.getElementById('revenueValue'),
+  linkClicks: document.getElementById('linkClicks'),
+  ordersValue: document.getElementById('ordersValue'),
+  chatPending: document.getElementById('chatPending'),
+};
+
+function formatCurrency(value) {
+  return `฿${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+function renderSummary() {
+  elements.revenueValue.textContent = formatCurrency(state.revenue);
+  elements.linkClicks.textContent = state.linkClicks.toString();
+  elements.ordersValue.textContent = state.orders.toString();
+  elements.chatPending.textContent = state.chatPending.toString();
+}
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((error) => {
+        console.warn('Service worker registration failed:', error);
+      });
+    });
+  }
+}
+
+function bindQuickActions() {
+  const buttons = document.querySelectorAll('.action-btn');
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      button.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(0.97)' },
+          { transform: 'scale(1)' },
+        ],
+        { duration: 220, easing: 'ease-out' }
+      );
+    });
+  });
+}
+
+function init() {
+  renderSummary();
+  bindQuickActions();
+  registerServiceWorker();
+}
+
+init();

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff7a00" />
+    <meta name="description" content="Shop Master mobile-first commerce dashboard" />
+    <title>Shop Master</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SHOP MASTER</p>
+        </div>
+        <button class="ghost-button" aria-label="Notifications">
+          🔔
+        </button>
+      </header>
+
+      <main class="dashboard">
+        <section class="stats-grid" aria-label="Revenue summary">
+          <article class="stat-card accent">
+            <span class="label">รายได้วันนี้</span>
+            <strong id="revenueValue">฿0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="label">คลิกลิงก์</span>
+            <strong id="linkClicks">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="label">ออเดอร์</span>
+            <strong id="ordersValue">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="label">ต้องตอบ</span>
+            <strong id="chatPending">0</strong>
+          </article>
+        </section>
+
+        <section class="quick-actions" aria-label="Quick actions">
+          <button class="action-btn primary">🔗 เพิ่มสินค้า</button>
+          <button class="action-btn">📦 สินค้าของฉัน</button>
+          <button class="action-btn">💬 แชต</button>
+          <button class="action-btn">🤖 AI Assistant</button>
+          <button class="action-btn">📊 Analytics</button>
+          <button class="action-btn">⚙️ Automation</button>
+        </section>
+
+        <section class="store-list" aria-label="Marketplace status">
+          <div class="store-row active">
+            <div class="store-name-wrap">
+              <span class="store-dot shopee"></span>
+              <span>Shopee</span>
+            </div>
+            <span class="status-tag">ยังไม่เชื่อม</span>
+          </div>
+
+          <div class="store-row active">
+            <div class="store-name-wrap">
+              <span class="store-dot lazada"></span>
+              <span>Lazada</span>
+            </div>
+            <span class="status-tag">ยังไม่เชื่อม</span>
+          </div>
+
+          <div class="store-row active">
+            <div class="store-name-wrap">
+              <span class="store-dot tiktok"></span>
+              <span>TikTok</span>
+            </div>
+            <span class="status-tag">ยังไม่เชื่อม</span>
+          </div>
+        </section>
+
+        <section class="insight-panel" aria-label="Operational summary">
+          <div class="panel-header">
+            <h2>รวมสรุป</h2>
+            <span>วันนี้</span>
+          </div>
+
+          <ul class="summary-list">
+            <li>
+              <span>สินค้าที่เพิ่มแล้ว</span>
+              <strong>0</strong>
+            </li>
+            <li>
+              <span>ยอดคอมมิชชั่น</span>
+              <strong>฿0</strong>
+            </li>
+            <li>
+              <span>ปฏิสัมพันธ์ AI</span>
+              <strong>0</strong>
+            </li>
+          </ul>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
