@@ -1,1 +1,278 @@
-:root{--bg:#0b1220;--panel:#111827;--line:#263247;--text:#edf2ff;--muted:#9aa9c1;--orange:#ff7a00;--orange2:#ff9f43;--green:#10b981}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(180deg,#0b1220,#111827);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.screen{display:none;min-height:100vh}.screen.active{display:block}.auth-screen{display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top,rgba(255,122,0,.2),transparent 45%),var(--bg)}.card{background:rgba(17,24,39,.94);border:1px solid var(--line);border-radius:20px}.auth-card{width:min(100%,420px);padding:24px}.brand{display:flex;align-items:center;gap:14px;margin-bottom:22px}.brand b{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--orange),var(--orange2));font-size:18px}.brand small,header small{color:var(--muted);letter-spacing:.1em;font-weight:700}.brand h1{margin:5px 0 0;font-size:1.5rem}.form{display:grid;gap:14px}.form label{display:grid;gap:7px;color:var(--muted);font-size:.85rem}.form input,.form select{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;background:#0d1626;color:var(--text)}.primary,.secondary,.icon{border-radius:12px;padding:13px;border:1px solid var(--line);color:var(--text)}.primary{background:linear-gradient(135deg,var(--orange),var(--orange2));border:0;color:white;font-weight:700}.secondary,.icon{background:rgba(255,255,255,.04)}.note{text-align:center;color:var(--muted);font-size:.85rem}.note a{color:var(--orange2)}.app-screen{max-width:480px;margin:auto;padding:18px 16px 90px}.topbar,.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.topbar{padding:4px 0 20px}.topbar h1{font-size:1.15rem;margin:6px 0 0}.icon{width:42px;height:42px;padding:0}.compact{padding:10px 13px;font-size:.8rem}.muted,.empty{color:var(--muted)}h2,h3{margin:0}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin:16px 0}.stat{display:grid;gap:8px;padding:15px 13px;min-height:88px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.04)}.stat small{color:var(--muted)}.stat strong{font-size:1.45rem}.stat.orange{background:linear-gradient(135deg,rgba(255,122,0,.23),rgba(255,159,67,.08));border-color:rgba(255,122,0,.3)}.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}.action{min-height:54px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.04);color:var(--text);font-weight:600}.primary-action{background:linear-gradient(135deg,var(--orange),var(--orange2));border:0}.panel{padding:16px;margin-bottom:16px}.store{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--line)}.store:first-of-type{margin-top:10px}.store span:first-child{display:flex;align-items:center;gap:10px}.store em{font-style:normal;color:var(--muted);font-size:.72rem;border:1px solid var(--line);border-radius:99px;padding:6px 9px}.dot{width:11px;height:11px;border-radius:50%;display:inline-block}.shopee{background:#ff6b2c}.lazada{background:#2576ff}.tiktok{background:#222}.view{display:none}.view.active{display:block}.empty{padding:24px 0}.message{padding:13px;border:1px solid var(--line);border-radius:12px;line-height:1.5}.product{padding:12px 0;border-top:1px solid var(--line)}.product:first-child{margin-top:10px}.product small{display:block;color:var(--muted);margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.on{color:#6ee7b7;font-size:.75rem}nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:min(92vw,460px);display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:7px;border:1px solid var(--line);border-radius:18px;background:rgba(15,23,42,.95);backdrop-filter:blur(8px)}.nav{display:grid;place-items:center;gap:3px;padding:8px 2px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--muted)}.nav.active{background:rgba(255,122,0,.12);color:var(--text);border-color:rgba(255,122,0,.22)}.nav small{font-size:.65rem}.modal{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.6)}.modal.hidden{display:none}.modal-card{width:min(100%,420px);padding:16px}@media(min-width:640px){.app-screen{max-width:760px}.stats{grid-template-columns:repeat(4,1fr)}}
+const state = {
+  products: [],
+  currentUser: null,
+  db: null,
+  auth: null,
+  firebaseReady: false,
+};
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+const STORAGE_KEY = 'shop-master-products';
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => document.querySelectorAll(selector);
+
+const loginScreen = $('#loginScreen');
+const appScreen = $('#appScreen');
+const modal = $('#modal');
+const productList = $('#productList');
+const welcomeText = $('#welcomeText');
+
+function hasFirebaseConfig() {
+  return Object.values(firebaseConfig).some((value) => value && !value.startsWith('YOUR_'));
+}
+
+function setupFirebase() {
+  if (!hasFirebaseConfig()) return;
+
+  try {
+    firebase.initializeApp(firebaseConfig);
+    state.auth = firebase.auth();
+    state.db = firebase.firestore();
+    state.firebaseReady = true;
+  } catch (error) {
+    console.warn('Firebase init failed:', error);
+  }
+}
+
+function renderProducts() {
+  if (!productList) return;
+
+  if (!state.products.length) {
+    productList.innerHTML = '<p class="empty">ยังไม่มีสินค้า เพิ่มสินค้าด้วย URL ได้เลย</p>';
+    return;
+  }
+
+  productList.innerHTML = state.products
+    .map(
+      (product) => `
+        <article class="product">
+          <b>${product.name}</b>
+          <small>${product.store} · ${product.url}</small>
+        </article>
+      `
+    )
+    .join('');
+}
+
+function renderStats() {
+  $('#revenueValue').textContent = '฿0';
+  $('#linkClicks').textContent = '0';
+  $('#orderValue').textContent = '0';
+  $('#chatPending').textContent = '0';
+}
+
+function loadLocalProducts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    state.products = Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    state.products = [];
+  }
+  renderProducts();
+}
+
+async function loadProductsFromFirebase() {
+  if (!state.firebaseReady || !state.currentUser) {
+    loadLocalProducts();
+    return;
+  }
+
+  try {
+    const snapshot = await state.db
+      .collection('products')
+      .where('uid', '==', state.currentUser.uid)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    state.products = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    renderProducts();
+  } catch (error) {
+    console.warn('Firestore read failed:', error);
+    loadLocalProducts();
+  }
+}
+
+function saveLocalProducts() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.products));
+}
+
+async function createProduct({ name, url, store }) {
+  const safeProduct = {
+    name,
+    url,
+    store,
+    createdAt: Date.now(),
+    uid: state.currentUser ? state.currentUser.uid : 'demo-user',
+  };
+
+  if (state.firebaseReady && state.currentUser) {
+    try {
+      const docRef = await state.db.collection('products').add(safeProduct);
+      state.products.unshift({ id: docRef.id, ...safeProduct });
+    } catch (error) {
+      console.warn('Firestore save failed:', error);
+      state.products.unshift(safeProduct);
+      saveLocalProducts();
+    }
+  } else {
+    state.products.unshift(safeProduct);
+    saveLocalProducts();
+  }
+
+  renderProducts();
+}
+
+function showLogin() {
+  loginScreen.classList.add('active');
+  appScreen.classList.remove('active');
+}
+
+function showApp() {
+  loginScreen.classList.remove('active');
+  appScreen.classList.add('active');
+}
+
+function handleLoginSuccess(user) {
+  state.currentUser = user;
+  welcomeText.textContent = user.displayName || user.email || 'สวัสดีครับ';
+  showApp();
+  renderStats();
+  loadProductsFromFirebase();
+}
+
+async function demoLogin() {
+  handleLoginSuccess({ email: 'demo@shopmaster.app', uid: 'demo-user', displayName: 'Panawat' });
+}
+
+async function firebaseEmailLogin(event) {
+  event.preventDefault();
+
+  if (!state.firebaseReady) {
+    await demoLogin();
+    return;
+  }
+
+  const email = $('#emailInput').value.trim();
+  const password = $('#passwordInput').value.trim();
+
+  try {
+    const result = await state.auth.signInWithEmailAndPassword(email, password);
+    handleLoginSuccess(result.user);
+  } catch (error) {
+    console.warn('Email login failed, using demo mode:', error);
+    await demoLogin();
+  }
+}
+
+function handleGoogleLogin() {
+  if (!state.firebaseReady) {
+    demoLogin();
+    return;
+  }
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+  state.auth.signInWithPopup(provider).then((result) => handleLoginSuccess(result.user)).catch(() => demoLogin());
+}
+
+function handleLogout() {
+  if (state.firebaseReady && state.auth) {
+    state.auth.signOut().catch(() => {});
+  }
+  state.currentUser = null;
+  showLogin();
+}
+
+function showView(viewName) {
+  const views = $$('.view');
+  views.forEach((view) => view.classList.toggle('active', view.id === viewName));
+
+  const navButtons = $$('.nav');
+  navButtons.forEach((button) => {
+    button.classList.toggle('active', button.dataset.view === viewName || (viewName === 'home' && button.dataset.view === 'home'));
+  });
+}
+
+function openModal() {
+  modal.classList.remove('hidden');
+}
+
+function closeModal() {
+  modal.classList.add('hidden');
+  $('#productForm').reset();
+}
+
+function bindEvents() {
+  $('#loginForm').addEventListener('submit', firebaseEmailLogin);
+  $('#googleLoginBtn').addEventListener('click', handleGoogleLogin);
+  $('#logoutBtn').addEventListener('click', handleLogout);
+  $('#openAddBtn').addEventListener('click', openModal);
+  $('#openAddSecondaryBtn').addEventListener('click', openModal);
+  $('#closeModalBtn').addEventListener('click', closeModal);
+
+  $('#productForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const name = $('#productName').value.trim();
+    const url = $('#productUrl').value.trim();
+    const store = $('#productStore').value;
+
+    if (!name || !url) return;
+
+    await createProduct({ name, url, store });
+    closeModal();
+    showView('products');
+  });
+
+  $$('.nav').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.view;
+      if (target === 'home') {
+        $('.view.active')?.classList.remove('active');
+        $$('.view').forEach((view) => view.classList.remove('active'));
+      } else {
+        showView(target);
+      }
+    });
+  });
+
+  $$('.action').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.view;
+      if (target === 'products') {
+        showView('products');
+      } else if (target === 'chat') {
+        showView('chat');
+      } else if (target === 'ai') {
+        showView('ai');
+      } else if (target === 'analytics') {
+        showView('analytics');
+      } else if (target === 'automation') {
+        showView('automation');
+      }
+    });
+  });
+}
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+}
+
+setupFirebase();
+bindEvents();
+renderProducts();
+renderStats();
+registerServiceWorker();
+loadLocalProducts();
+showLogin();
